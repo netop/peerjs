@@ -7802,13 +7802,19 @@ function () {
 
           break;
 
+        case "connected":
+          logger_1.default.log("iceConnectionState is connected for " + peerId);
+
+          _this.connection.clearCloseTimeout();
+
+          break;
+
         case "disconnected":
           logger_1.default.log("iceConnectionState is disconnected, closing connections to " + peerId);
 
           _this.connection.emit(enums_1.ConnectionEventType.Error, new Error("Connection to " + peerId + " disconnected."));
 
-          _this.connection.close();
-
+          !_this.connection.setCloseTimeout() && _this.connection.close();
           break;
 
         case "completed":
@@ -8235,6 +8241,8 @@ function (_super) {
     _this.provider = provider;
     _this.options = options;
     _this._open = false;
+    _this.reconnectTimeoutId = 0;
+    _this.reconnectable = false;
     _this.metadata = options.metadata;
     return _this;
   }
@@ -8246,6 +8254,28 @@ function (_super) {
     enumerable: true,
     configurable: true
   });
+  /** Start a timeout to allow for native reconnection. */
+
+  BaseConnection.prototype.setCloseTimeout = function () {
+    var _this = this;
+
+    if (!this.reconnectable || !this.open) {
+      return false;
+    }
+
+    this.reconnectTimeoutId || (this.reconnectTimeoutId = self.setTimeout(function () {
+      return _this.open && _this.close();
+    }, 15000));
+    return true;
+  };
+  /** Clear the reconnect timeout. */
+
+
+  BaseConnection.prototype.clearCloseTimeout = function () {
+    clearTimeout(this.reconnectTimeoutId);
+    this.reconnectTimeoutId = 0;
+  };
+
   return BaseConnection;
 }(eventemitter3_1.EventEmitter);
 
@@ -8482,6 +8512,8 @@ function (_super) {
       this.options._stream = null;
     }
 
+    this.clearCloseTimeout();
+
     if (!this.open) {
       return;
     }
@@ -8646,6 +8678,22 @@ var __extends = this && this.__extends || function () {
   };
 }();
 
+var __assign = this && this.__assign || function () {
+  __assign = Object.assign || function (t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+      s = arguments[i];
+
+      for (var p in s) {
+        if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+      }
+    }
+
+    return t;
+  };
+
+  return __assign.apply(this, arguments);
+};
+
 var __values = this && this.__values || function (o) {
   var s = typeof Symbol === "function" && Symbol.iterator,
       m = s && o[s],
@@ -8695,7 +8743,9 @@ function (_super) {
   __extends(DataConnection, _super);
 
   function DataConnection(peerId, provider, options) {
-    var _this = _super.call(this, peerId, provider, options) || this;
+    var _this = _super.call(this, peerId, provider, __assign({
+      sdpTransform: DataConnection._higherBandwidthSDPTransform
+    }, options)) || this;
 
     _this.stringify = JSON.stringify;
     _this.parse = JSON.parse;
@@ -8755,6 +8805,21 @@ function (_super) {
     this._dc = dc;
 
     this._configureDataChannel();
+  }; // SDP transform to increase bandwidth limit.
+
+
+  DataConnection._higherBandwidthSDPTransform = function (sdp) {
+    // AS stands for Application-Specific Maximum.
+    // Bandwidth number is in kilobits / sec.
+    // See RFC for more info: http://www.ietf.org/rfc/rfc2327.txt
+    var parts = sdp.split('b=AS:30');
+    var replace = 'b=AS:102400'; // 100 Mbps
+
+    if (parts.length > 1) {
+      return parts[0] + replace + parts[1];
+    }
+
+    return sdp;
   };
 
   DataConnection.prototype._configureDataChannel = function () {
@@ -8884,6 +8949,8 @@ function (_super) {
 
       this._encodingQueue = null;
     }
+
+    this.clearCloseTimeout();
 
     if (!this.open) {
       return;
@@ -9705,7 +9772,9 @@ function (_super) {
 
       case enums_1.ServerMessageType.Expire:
         // The offer sent to a peer has expired without response.
-        this.emitError(enums_1.PeerErrorType.PeerUnavailable, "Could not connect to peer " + peerId);
+        this.emitError(enums_1.PeerErrorType.PeerUnavailable, "Could not connect to peer " + peerId, {
+          peerId: peerId
+        });
         break;
 
       case enums_1.ServerMessageType.Offer:
@@ -9962,7 +10031,11 @@ function (_super) {
   /** Emits a typed error message. */
 
 
-  Peer.prototype.emitError = function (type, err) {
+  Peer.prototype.emitError = function (type, err, additionalFields) {
+    if (additionalFields === void 0) {
+      additionalFields = {};
+    }
+
     logger_1.default.error("Error:", err);
     var error;
 
@@ -9973,6 +10046,11 @@ function (_super) {
     }
 
     error.type = type;
+
+    for (var field in additionalFields) {
+      error[field] = additionalFields[field];
+    }
+
     this.emit(enums_1.PeerEventType.Error, error);
   };
   /**
