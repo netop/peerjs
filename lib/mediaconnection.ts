@@ -117,6 +117,8 @@ export class MediaConnection extends BaseConnection {
       this.options._stream = null;
     }
 
+    this.clearCloseTimeout();
+
     if (!this.open) {
       return;
     }

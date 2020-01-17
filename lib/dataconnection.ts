@@ -201,6 +201,8 @@ export class DataConnection extends BaseConnection implements IDataConnection {
       this._encodingQueue = null;
     }
 
+    this.clearCloseTimeout();
+
     if (!this.open) {
       return;
     }
