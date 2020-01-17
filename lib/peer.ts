@@ -238,7 +238,7 @@ export class Peer extends EventEmitter {
         this._connections.delete(peerId);
         break;
       case ServerMessageType.Expire: // The offer sent to a peer has expired without response.
-        this.emitError(PeerErrorType.PeerUnavailable, `Could not connect to peer ${peerId}`);
+        this.emitError(PeerErrorType.PeerUnavailable, `Could not connect to peer ${peerId}`, { peerId });
         break;
       case ServerMessageType.Offer: {
         // we should consider switching this to CALL/CONNECT, but this is the least breaking option.
@@ -450,7 +450,7 @@ export class Peer extends EventEmitter {
   }
 
   /** Emits a typed error message. */
-  emitError(type: PeerErrorType, err: string | Error): void {
+  emitError(type: PeerErrorType, err: string | Error, additionalFields = {}): void {
     logger.error("Error:", err);
 
     let error: Error & { type?: PeerErrorType };
@@ -462,6 +462,10 @@ export class Peer extends EventEmitter {
     }
 
     error.type = type;
+
+    for(let field in additionalFields) {
+      error[field] = additionalFields[field]
+    }
 
     this.emit(PeerEventType.Error, error);
   }
