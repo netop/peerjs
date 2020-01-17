@@ -52,7 +52,7 @@ export class DataConnection extends BaseConnection implements IDataConnection {
   get bufferSize(): number { return this._bufferSize; }
 
   constructor(peerId: string, provider: Peer, options: any) {
-    super(peerId, provider, options);
+    super(peerId, provider, { sdpTransform: DataConnection._higherBandwidthSDPTransform, ...options });
 
     this.connectionId =
       this.options.connectionId || DataConnection.ID_PREFIX + util.randomToken();
@@ -83,6 +83,19 @@ export class DataConnection extends BaseConnection implements IDataConnection {
   initialize(dc: RTCDataChannel): void {
     this._dc = dc;
     this._configureDataChannel();
+  }
+
+  // SDP transform to increase bandwidth limit.
+  private static _higherBandwidthSDPTransform(sdp) {
+      // AS stands for Application-Specific Maximum.
+      // Bandwidth number is in kilobits / sec.
+      // See RFC for more info: http://www.ietf.org/rfc/rfc2327.txt
+      const parts = sdp.split('b=AS:30');
+      const replace = 'b=AS:102400'; // 100 Mbps
+      if (parts.length > 1) {
+        return parts[0] + replace + parts[1];
+      }
+      return sdp;
   }
 
   private _configureDataChannel(): void {
