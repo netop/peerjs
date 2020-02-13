@@ -2,6 +2,7 @@ import { EventEmitter } from "eventemitter3";
 import { util } from "./util";
 import logger, { LogLevel } from "./logger";
 import { Socket } from "./socket";
+import { createServerConnection } from "./serverconnection";
 import { MediaConnection } from "./mediaconnection";
 import { DataConnection } from "./dataconnection";
 import {
@@ -26,6 +27,7 @@ class PeerOptions implements PeerJSOption {
   config?: any;
   secure?: boolean;
   pingInterval?: number;
+  useXHRStreamFallback?: boolean;
   logFunction?: (logLevel: LogLevel, ...rest: any[]) => void;
 }
 
@@ -168,13 +170,14 @@ export class Peer extends EventEmitter {
   }
 
   private _createServerConnection(): Socket {
-    const socket = new Socket(
+    const socket = createServerConnection(
       this._options.secure,
       this._options.host!,
       this._options.port!,
       this._options.path!,
       this._options.key!,
-      this._options.pingInterval
+      this._options.pingInterval,
+      this._options.useXHRStreamFallback
     );
 
     socket.on(SocketEventType.Message, (data: ServerMessage) => {
