@@ -8007,7 +8007,7 @@ exports.ServerConnection = ServerConnection;
 /** Factory method */
 
 function createServerConnection(secure, host, port, path, key, pingInterval, useXHRStreamFallback) {
-  return useXHRStreamFallback ? new socket_1.Socket(secure, host, port, path, key, pingInterval) : new ServerConnection(secure, host, port, path, key, pingInterval);
+  return !useXHRStreamFallback ? new socket_1.Socket(secure, host, port, path, key, pingInterval) : new ServerConnection(secure, host, port, path, key, pingInterval);
 }
 
 exports.createServerConnection = createServerConnection;
