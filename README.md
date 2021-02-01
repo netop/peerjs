@@ -1,11 +1,15 @@
 # PeerJS: Simple peer-to-peer with WebRTC #
 
-### https://t.me/joinchat/ENhPuhTvhm8WlIxTjQf7Og
+### https://t.me/joinchat/VWI0UBxnG7f7_DV7
 
 [![Backers on Open Collective](https://opencollective.com/peer/backers/badge.svg)](#backers)
  [![Sponsors on Open Collective](https://opencollective.com/peer/sponsors/badge.svg)](#sponsors) 
 
 PeerJS provides a complete, configurable, and easy-to-use peer-to-peer API built on top of WebRTC, supporting both data channels and media streams.
+
+## Live Example
+
+Here's an example application that uses both media and data connections: https://glitch.com/~peerjs-video. The example also uses its own [PeerServer](https://github.com/peers/peerjs-server).
 
 ## Setup
 
@@ -103,14 +107,14 @@ A. The message occurs when you use PeerJS with Webpack. It is not critical! It r
 
 ### [PeerServer](https://github.com/peers/peerjs-server)
 
-### [Discuss PeerJS on our Google Group](https://groups.google.com/forum/?fromgroups#!forum/peerjs)
+### [Discuss PeerJS on our Telegram Channel](https://t.me/joinchat/ENhPuhTvhm8WlIxTjQf7Og)
 
 ### [Changelog](https://github.com/peers/peerjs/blob/master/changelog.md)
 
 ## Contributors
 
-This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
-<a href="graphs/contributors"><img src="https://opencollective.com/peer/contributors.svg?width=890&button=false" /></a>
+This project exists thanks to all the people who contribute.
+<a href="https://github.com/peers/peerjs/graphs/contributors"><img src="https://opencollective.com/peer/contributors.svg?width=890&button=false" /></a>
 
 ## Backers
 
